@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+<form>
+  <div class="form-row align-items-center">
+    <div class="col">
+      <input id="keyword" type="text" class="form-control" placeholder="Keyword">
+    </div>
+    <div class="col-auto my-1">
+      <select id="search_keyword" class="custom-select mr-sm-2" id="inlineFormCustomSelect">
+        <option selected>All Keywords</option>
+        {% for sk in search_keywords %}
+        <option value="{{ sk.search_keyword }}">{{ sk.search_keyword }}</option>
+        {% endfor %}
+      </select>
+    </div>
+        <div class="col-auto my-1">
+      <select id="user" class="custom-select mr-sm-2" id="inlineFormCustomSelect">
+        <option selected>All User</option>
+        {% for user in users %}
+        <option >{{ user.user }}</option>
+        {% endfor %}
+      </select>
+    </div>
+            <div class="col-auto my-1">
+      <select id="range" class="custom-select mr-sm-2" id="inlineFormCustomSelect">
+        <option selected>Time Range</option>
+        <option value="1"> See data from yesterday</option>
+        <option value="2">See data from last week</option>
+        <option value="3">See data from last month </option>
+      </select>
+    </div>
+    
+
+Select Date:&nbsp; <input type="text" name="daterange" value="01/01/2020 - 01/15/2020" />
+
+    <div class="col-auto my-1">
+      <button id="submit_button" type="button" class="btn btn-primary">Search</button>
+    </div>
+  </div>
+</form>
+
+<table class="table table-hover table-dark table-sm">
+  <thead>
+    <tr>
+      <th scope="col">Number</th>
+      <th scope="col">User</th>
+      <th scope="col">Search Keyword</th>
+      <th scope="col">Search Time</th>
+      <th scope="col">Search Engine_name</th>
+      <th scope="col">Search Keyword Language</th>
+    </tr>
+  </thead>
+  {% for history in search_history_all_obj %}
+  <tbody>
+    <tr>
+      <th scope="row"> {{ forloop.counter }} </th>
+      <td>{{ history.user }}</td>
+      <td>{{ history.search_keyword }}</td>
+      <td>{{ history.search_time }}</td>
+      <td>{{ history.search_engine_name }}</td>
+      <td>{{ history.search_keyword_language }}</td>
+    </tr>
+  </tbody>
+  {% endfor %}
+</table>
+{% endblock %}
+
+{% block javascript %}
+<!-- == jQuery Librery == -->
+<script>
+$(function() {
+  $('input[name="daterange"]').daterangepicker({
+    opens: 'left'
+  }, function(start, end, label) {
+        localStorage.setItem("start", start.format('YYYY-MM-DD'));
+        localStorage.setItem("end", end.format('YYYY-MM-DD'));
+
+    console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+  });
+});
+
+$( "#submit_button" ).click(function() {
+    var query = $('#keyword').val();
+    var s_keyword= $("#search_keyword option:selected").text();
+    if (s_keyword === 'All Keywords'){
+        s_keyword= false
+    }
+    var user_name= $("#user option:selected").text();
+    if (user_name === 'All User'){
+        user_name= false
+    }
+    var range= $("#range option:selected").val();
+    if (range === 'Time Range'){
+        range= false
+    }
+    var start_date = localStorage.getItem("start");
+    var end_date = localStorage.getItem("end");
+    console.log(user_name, range, start_date,end_date )
+
+  $.ajax({
+    type: 'POST',
+    url: '{% url "filter_search:user_search_history" %}',
+    data: {
+        any_value_search: query,
+        start: start_date,
+        end: end_date,
+        keyword: s_keyword,
+        user: user_name,
+        range: range
+    },
+    success: function (data) {
+        
+    }
+});
+
+});
+</script>
+{% endblock %}
