@@ -2,17 +2,16 @@
 
 
 {% block content %}
-
 <form>
   <div class="form-row align-items-center">
     <div class="col">
-      <input id="keyword" type="text" class="form-control" placeholder="Keyword">
+      <input id="keyword" type="text" class="form-control" placeholder="User, Keyword, Engine name,Keyword Language">
     </div>
-    <div class="col-auto my-1">
+    <div class="col-auto my-1" style="width:150px">
       <select id="search_keyword" class="custom-select mr-sm-2" id="inlineFormCustomSelect">
         <option selected>All Keywords</option>
         {% for sk in search_keywords %}
-        <option value="{{ sk.search_keyword }}">{{ sk.search_keyword }}</option>
+        <option value="{{ sk.search_keyword }}">{{ sk.search_keyword }}- ({{ sk.count }})</option>
         {% endfor %}
       </select>
     </div>
@@ -33,16 +32,15 @@
       </select>
     </div>
     
-
-Select Date:&nbsp; <input type="text" name="daterange" value="01/01/2020 - 01/15/2020" />
+        Select Date:&nbsp;&nbsp;  <input style="width:110px" id="start_date" type="date"/>  <input style="width:110px" id="end_date" type="date" />
 
     <div class="col-auto my-1">
-      <button id="submit_button" type="button" class="btn btn-primary">Search</button>
+      <button id="submit_button" type="button" class="btn btn-primary">Filter</button>
     </div>
   </div>
 </form>
 
-<table class="table table-hover table-dark table-sm">
+<table id="history_table" class="table table-hover table-dark table-sm">
   <thead>
     <tr>
       <th scope="col">Number</th>
@@ -51,10 +49,12 @@ Select Date:&nbsp; <input type="text" name="daterange" value="01/01/2020 - 01/15
       <th scope="col">Search Time</th>
       <th scope="col">Search Engine_name</th>
       <th scope="col">Search Keyword Language</th>
+      <th scope="col"> Result </th>
     </tr>
   </thead>
-  {% for history in search_history_all_obj %}
+
   <tbody>
+    {% for history in search_history_all_obj %}
     <tr>
       <th scope="row"> {{ forloop.counter }} </th>
       <td>{{ history.user }}</td>
@@ -62,44 +62,48 @@ Select Date:&nbsp; <input type="text" name="daterange" value="01/01/2020 - 01/15
       <td>{{ history.search_time }}</td>
       <td>{{ history.search_engine_name }}</td>
       <td>{{ history.search_keyword_language }}</td>
+      <td>{{ history.result }}</td>
     </tr>
+    {% endfor %}
   </tbody>
-  {% endfor %}
 </table>
 {% endblock %}
 
-{% block javascript %}
-<!-- == jQuery Librery == -->
-<script>
-$(function() {
-  $('input[name="daterange"]').daterangepicker({
-    opens: 'left'
-  }, function(start, end, label) {
-        localStorage.setItem("start", start.format('YYYY-MM-DD'));
-        localStorage.setItem("end", end.format('YYYY-MM-DD'));
 
-    console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
-  });
-});
+
+
+{% block javascript %}
+<script>
 
 $( "#submit_button" ).click(function() {
+
     var query = $('#keyword').val();
-    var s_keyword= $("#search_keyword option:selected").text();
+    var s_keyword= $("#search_keyword option:selected").val();
     if (s_keyword === 'All Keywords'){
         s_keyword= false
     }
+
     var user_name= $("#user option:selected").text();
     if (user_name === 'All User'){
         user_name= false
     }
+
     var range= $("#range option:selected").val();
     if (range === 'Time Range'){
         range= false
     }
-    var start_date = localStorage.getItem("start");
-    var end_date = localStorage.getItem("end");
-    console.log(user_name, range, start_date,end_date )
 
+    var start_date= $("#start_date").val();
+    var end_date= $("#end_date").val();
+
+    //ensure declere both date start and end
+    if (start_date){
+      if (!end_date){
+        return alert('select end date')
+      }
+    }
+
+  //jqueryajax call
   $.ajax({
     type: 'POST',
     url: '{% url "filter_search:user_search_history" %}',
@@ -112,10 +116,24 @@ $( "#submit_button" ).click(function() {
         range: range
     },
     success: function (data) {
-        
+       var content = '';
+            //content += '<tbody>'; -- **superfluous**
+        for (var i = 0; i < data.length; i++) {
+            content+= '<tr>'
+            content+= '<th scope="row">' +(i+1)+'</th>'
+            content+= '<td>'+ data[i].user +'</td>'
+            content+= '<td>'+ data[i].search_keyword +'</td>'
+            content+= '<td>'+ data[i].search_time +'</td>'
+            content+= '<td>'+ data[i].search_engine_name +'</td>'
+            content+= '<td>'+ data[i].search_keyword_language +'</td>'
+            content+= '<td>'+ data[i].result +'</td>'
+            content+= "</tr>"
+        }
+        $('#history_table tbody').empty();
+        $('#history_table tbody').html(content);
     }
 });
-
 });
 </script>
+
 {% endblock %}
