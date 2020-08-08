@@ -9,7 +9,7 @@
     </div>
     <div class="col-auto my-1" style="width:150px">
       <select id="search_keyword" class="custom-select mr-sm-2" id="inlineFormCustomSelect">
-        <option selected>All Keywords</option>
+        <option value='false' selected>All Keywords</option>
         {% for sk in search_keywords %}
         <option value="{{ sk.search_keyword }}">{{ sk.search_keyword }}- ({{ sk.count }})</option>
         {% endfor %}
@@ -17,15 +17,15 @@
     </div>
         <div class="col-auto my-1">
       <select id="user" class="custom-select mr-sm-2" id="inlineFormCustomSelect">
-        <option selected>All User</option>
+        <option value='false' selected>All User</option>
         {% for user in users %}
-        <option >{{ user.user }}</option>
+        <option value="{{ user.user }}">{{ user.user }}</option>
         {% endfor %}
       </select>
     </div>
             <div class="col-auto my-1">
       <select id="range" class="custom-select mr-sm-2" id="inlineFormCustomSelect">
-        <option selected>Time Range</option>
+        <option value='false' selected>Time Range</option>
         <option value="1"> See data from yesterday</option>
         <option value="2">See data from last week</option>
         <option value="3">See data from last month </option>
@@ -79,20 +79,8 @@ $( "#submit_button" ).click(function() {
 
     var query = $('#keyword').val();
     var s_keyword= $("#search_keyword option:selected").val();
-    if (s_keyword === 'All Keywords'){
-        s_keyword= false
-    }
-
-    var user_name= $("#user option:selected").text();
-    if (user_name === 'All User'){
-        user_name= false
-    }
-
+    var user_name= $("#user option:selected").val();
     var range= $("#range option:selected").val();
-    if (range === 'Time Range'){
-        range= false
-    }
-
     var start_date= $("#start_date").val();
     var end_date= $("#end_date").val();
 
@@ -103,7 +91,7 @@ $( "#submit_button" ).click(function() {
       }
     }
 
-  //jqueryajax call
+  //jquery ajax call
   $.ajax({
     type: 'POST',
     url: '{% url "filter_search:user_search_history" %}',
@@ -117,7 +105,6 @@ $( "#submit_button" ).click(function() {
     },
     success: function (data) {
        var content = '';
-            //content += '<tbody>'; -- **superfluous**
         for (var i = 0; i < data.length; i++) {
             content+= '<tr>'
             content+= '<th scope="row">' +(i+1)+'</th>'
@@ -129,6 +116,7 @@ $( "#submit_button" ).click(function() {
             content+= '<td>'+ data[i].result +'</td>'
             content+= "</tr>"
         }
+        // empty tbody and then update with new value
         $('#history_table tbody').empty();
         $('#history_table tbody').html(content);
     }

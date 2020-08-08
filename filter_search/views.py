@@ -56,7 +56,7 @@ class UserSearchHistory(View):
                     Q(search_keyword_language__icontains=query)
                 )
 
-            #false mean not selected this filter
+            #false mean not selected this filter/ default selected value is 'false'
             if keyword != "false":
                 search_history_all_obj= search_history_all_obj.filter(search_keyword= keyword)
             
@@ -78,4 +78,4 @@ class UserSearchHistory(View):
                 search_history_all_obj= search_history_all_obj.filter(search_time__range=[start, end])
 
             data= search_history_all_obj.values('user', 'search_keyword', 'search_time', 'search_engine_name', 'search_keyword_language', 'result')
-            return JsonResponse(list(data), safe= False)
+            return JsonResponse([i for i in data], safe= False)
